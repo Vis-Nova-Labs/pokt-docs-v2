@@ -4,7 +4,7 @@
 
 Pocket requires that nodes have an SSL ([Secure Sockets Layer](https://www.cloudflare.com/learning/ssl/what-is-ssl/)) certificate for secure communications. SSL is a layer of security that sits on top of TCP/IP ([Internet Protocol Suite](https://en.wikipedia.org/wiki/Internet\_protocol\_suite)). It’s used to encrypt the data sent between a client and a server. To use SSL, you need to have a certificate and a key. Thankfully, getting an SSL certificate and key is straightforward and free.
 
-To get a certificate, we’ll be using[ Let’s Encrypt](https://letsencrypt.org/), which is a service that issues SSL certificates for free. We’ll also be using software called[ certbot](https://certbot.eff.org/) to register, install, and renew the certificate.
+To get a certificate, we’ll be using[Let’s Encrypt](https://letsencrypt.org/), which is a service that issues SSL certificates for free. We’ll also be using software called[certbot](https://certbot.eff.org/) to register, install, and renew the certificate.
 
 #### Registering an SSL certificate <a href="#registering-an-ssl-certificate" id="registering-an-ssl-certificate"></a>
 
@@ -54,19 +54,21 @@ The Nginx configuration files we’re interested in are located in the /etc/ngin
 
 To configure Nginx:
 
-1.  Confirm the name of your SSL certificate:
+1. Confirm the name of your SSL certificate:
 
     ```bash
     sudo ls /etc/letsencrypt/live/
     ```
-2.  Create a new config file with nano:
+
+2. Create a new config file with nano:
 
     ```bash
     sudo nano /etc/nginx/sites-available/pocket
     ```
-3.  Add the following code, making sure to change the hostname values (`pokt001.pokt.run`) to your node’s DNS hostname in the three places found below:
 
-    ```
+3. Add the following code, making sure to change the hostname values (`pokt001.pokt.run`) to your node’s DNS hostname in the three places found below:
+
+    ```conf
     server {
         listen 80 default_server;
         listen [::]:80 default_server;
@@ -124,24 +126,30 @@ To configure Nginx:
         }
     }
     ```
+
 4. Save the change with `Ctrl+O`.
+
 5. Exit nano with `Ctrl+X`.
-6.  Stop Nginx with:
+
+6. Stop Nginx with:
 
     ```bash
     sudo systemctl stop nginx
     ```
-7.  Disable the default configuration:
+
+7. Disable the default configuration:
 
     ```bash
     sudo rm /etc/nginx/sites-enabled/default
     ```
-8.  Enable our new configuration:
+
+8. Enable our new configuration:
 
     ```bash
     sudo ln -s /etc/nginx/sites-available/pocket /etc/nginx/sites-enabled/pocket
     ```
-9.  Start Nginx:
+
+9. Start Nginx:
 
     ```bash
     sudo systemctl start nginx
@@ -149,53 +157,59 @@ To configure Nginx:
 
 ### Enable UFW <a href="#enable-ufw" id="enable-ufw"></a>
 
-We’re almost done, but before we finish we’ll make our server more secure by setting firewall rules to limit network exposure. The[ Uncomplicated Firewall](https://wiki.ubuntu.com/UncomplicatedFirewall) (UFW) is a security tool that makes configuring the firewall simple. We’ll use it to disable unnecessary ports.
+We’re almost done, but before we finish we’ll make our server more secure by setting firewall rules to limit network exposure. The [Uncomplicated Firewall](https://wiki.ubuntu.com/UncomplicatedFirewall) AKA (UFW) is a security tool that makes configuring the firewall simple. We’ll use it to disable unnecessary ports.
 
-**Ports you need to open**
+### Ports To Open
 
-To run  a Pocket node, you’ll need to open the following ports on the server:&#x20;
+To run a Pocket node, you’ll need to open the following ports on the server:&#x20;
 
 * `22`: SSH
 * `80`: HTTP
 * `443`: HTTPS
-* `8081`: For the Pocket HTTP API
-* `26656`: For the Pocket RPC API
+* `8081`: For the Pocket HTTP RPC API
+* `26656`: For the Pocket P2P Port
 
 #### Use UFW to disable unnecessary ports <a href="#use-ufw-to-disable-unnecessary-ports" id="use-ufw-to-disable-unnecessary-ports"></a>
 
 To use UFW to configure the firewall:
 
-1.  Enable UFW. When prompted, press `y` to confirm:
+1. Enable UFW. When prompted, press `y` to confirm:
 
     ```bash
     sudo ufw enable
     ```
-2.  Set the default to deny all incoming connections:
+
+2. Set the default to deny all incoming connections:
 
     ```bash
     sudo ufw default deny
     ```
-3.  Allow the SSH port:
+
+3. Allow the SSH port:
 
     ```bash
     sudo ufw allow ssh
     ```
-4.  Allow port 80:
+
+4. Allow port 80:
 
     ```bash
     sudo ufw allow 80
     ```
-5.  Allow port 443:
+
+5. Allow port 443:
 
     ```bash
     sudo ufw allow 443
     ```
-6.  Allow port 8081:
+
+6. Allow port 8081:
 
     ```bash
     sudo ufw allow 8081
     ```
-7.  Allow port 26656:
+
+7. Allow port 26656:
 
     ```bash
     sudo ufw allow 26656

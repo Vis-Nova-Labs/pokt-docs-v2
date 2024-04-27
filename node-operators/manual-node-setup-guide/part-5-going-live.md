@@ -1,12 +1,12 @@
 # Part 5 - Going Live
 
-### Test everything <a href="#test-everything" id="test-everything"></a>
+## Test everything <a href="#test-everything" id="test-everything"></a>
 
 At this point your Pocket node should be up and running!
 
 But you’ll want to confirm this. The following are some of the queries you can perform to test your Pocket node.
 
-#### Pocket process <a href="#make-sure-the-pocket-process-is-running" id="make-sure-the-pocket-process-is-running"></a>
+### Pocket process <a href="#make-sure-the-pocket-process-is-running" id="make-sure-the-pocket-process-is-running"></a>
 
 The first thing to check is that the Pocket process in its service is running by running the following command:
 
@@ -16,7 +16,7 @@ top -b -n 1 | grep pocket
 
 You should see output similar to the following:
 
-```
+```bash
   44871 root      20   0 1018268  33948  21448 S   0.0   0.4   0:00.17 pocket
 ```
 
@@ -122,39 +122,54 @@ If you’re using the Pocket CLI to fund an account, keep in mind that the CLI u
 
 Also keep in mind that there is a cost for every transaction you execute. At the moment, that cost is a flat fee of 0.01 POKT, or 10000 µPOKT (one POKT covers 100 transactions).
 
-1.  List your accounts:
+1. List your accounts:
 
     ```bash
     pocket accounts list
     ```
-2.  Confirm the validator account is set:
+
+2. Confirm the validator account is set:
 
     ```bash
     pocket accounts get-validator
     ```
-3.  Confirm the node account has enough POKT. This should be at least 15,001 POKT. You’ll want 15,000 to stake and one POKT to cover the staking transaction fee :
+
+3. Confirm the node account has enough POKT. This should be at minimum 15,001 POKT. You’ll need at least 15,000 POKT to stake and an additional 1 (or slightly more) POKT to cover the staking transaction fee:
 
     ```bash
     pocket query balance [YOUR_VALIDATOR_ADDRESS]
     ```
-4.  Stake your node, making sure to enter the correct details for your setup:
 
-    ```bash
-    pocket nodes stake custodial [YOUR_VALIDATOR_ADDRESS] 15000000000 [CHAIN_IDS] https://[HOSTNAME]:443 mainnet 10000 false
-    ```
-
-{% hint style="info" %}
-The `[CHAIN_IDS]` placeholder should be a list of relay chain IDs that are defined in your `~/.pocket/config/chains.json` file. In this guide we set up only`0001`, but if you were relaying to multiple chains, each id would be separated by a comma. For example, `0001,0022,0040`.
-{% endhint %}
-
-{% hint style="info" %}
-As of Pocket Core version`RC-0.9.1.3` there are two staking methods: `custodial` and `non-custodial`. The custodial method is used in the example above.
-{% endhint %}
-
-After you send the stake command, you’ll be prompted for your passphrase, after which you should see something similar to this:
+4. Stake your node, making sure to enter the correct details for your setup (This example uses Custodial Staking):
 
 ```bash
-http://localhost:8082/v1/client/rawtx
+pocket nodes stake custodial <fromAddr>  <amount_in>  <RelayChainIDs>       <serviceURI>               <networkID>     <fee>   <isBefore8.0> [flags]
+  #                          Address     in uPokt    Comma,Separated  https://domain.tld:port(443) mainnet/testnet  in uPokt    false   --pwd 'passwd'
+--pwd <password for keyfile>   passphrase used to sign, usage bypasses interactive prompt # (For certain special characters `!` especially, you must surround with single quotes to escape history expansion `--pwd 'abc!POKT'` or you will get bash errors. Windows PWSH users may need to also use `\` preceding the single quotes to escape history expansion)
+    # Global Flags:
+    #  --datadir string            data directory (default is $HOME/.pocket/
+    #  --node string               takes a remote endpoint in the form <protocol>://<host>:<port>
+    #  --persistent_peers string   a comma separated list of PeerURLs: '<ID>@<IP>:<PORT>,<ID2>@<IP2>:<PORT>...<IDn>@<IPn>:<PORT>'
+    #  --remoteCLIURL string       takes a remote endpoint in the form of <protocol>://<host> (uses RPC Port)
+    #  --seeds string              a comma separated list of PeerURLs: '<ID>@<IP>:<PORT>,<ID2>@<IP2>:<PORT>...<IDn>@<IPn>:<PORT>'
+```
+
+```bash
+pocket nodes stake custodial [YOUR_VALIDATOR_ADDRESS] 15000000000 [CHAIN_IDS] https://[HOSTNAME]:443 mainnet 10000 false
+```
+
+{% hint style="info" %}
+The `[CHAIN_IDS]` placeholder should be a list of relay chain IDs that are defined in your `~/.pocket/config/chains.json` file. In this guide we set up only`0001`, but if you were relaying to multiple chains, each id would be separated by a comma. For example, `0001,009,0021,B021`.
+{% endhint %}
+
+{% hint style="info" %}
+As of Pocket Core version`RC-0.11.1` there are now 3 staking methods: `stakeNew`, `custodial`, and `non-custodial`. The custodial method is used in the example above.
+{% endhint %}
+
+After you send the stake command, you’ll be prompted for your passphrase unless you passed it in the command with the `--pwd` flag, after which you should see something similar to this:
+
+```bash
+http://localhost:8081/v1/client/rawtx
 {
     "logs": null,
     "txhash": "155D46196C69F75F85791C4190D384B8BAFFBBEFCC5D1311130C54A1C54435A7"
@@ -174,7 +189,7 @@ pocket query node [YOUR_VALIDATOR_ADDRESS]
 If you see something like the following, it means your node is not yet staked:
 
 ```bash
-http://localhost:8082/v1/query/node
+http://localhost:8081/v1/query/node
 the http status code was not okay: 400, and the status was: 400 Bad Request, with a response of {"code":400,"message":"validator not found for 07f5084ab5f5246d747fd1154d5d4387ee5a7111"}
 ```
 
@@ -186,4 +201,4 @@ Congratulations! You’ve successfully set up a Pocket node.
 
 There’s more to running a Pocket node than this, such as maintenance, upgrades, and other administrative tasks, but now you're on the right path. Thank you for doing your part to help decentralize Web3!
 
-[^1]: 
+[^1]:

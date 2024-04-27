@@ -6,11 +6,11 @@ description: This section contains tutorials on setup and management of Pocket n
 
 **The Easy Way**
 
-The easiest way to deploy your node is to use Node Pilot, a free tool that was custom built for  Pocket Network.
+The easiest way to deploy your node is to use Node Pilot, a free tool that was custom built for Pocket Network.
 
 Node Pilot provides an intuitive user interface to set up and manage Pocket and relay chain nodes.
 
-You can access Node Pilot[ here](https://nodepilot.tech/).
+You can access Node Pilot[here](https://nodepilot.tech/).
 
 ***
 

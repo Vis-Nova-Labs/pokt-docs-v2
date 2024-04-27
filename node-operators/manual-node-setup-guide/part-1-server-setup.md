@@ -16,8 +16,6 @@ Pocket has no affiliation with Linode and does not recommend any one provider ov
 
 Let’s start by creating a Linode instance (a virtual machine).
 
-
-
 ### 1. Create a Linode instance <a href="#create-a-linode-instance" id="create-a-linode-instance"></a>
 
 To create a Linode instance, do the following:
@@ -38,12 +36,18 @@ For a more detailed guide on setting up a Linode instance, see the [Linode docs]
 
 The Pocket blockchain is very large and growing all the time, and the snapshot we’ll be downloading in a later step is too large to fit on this Linode instance.
 
-Because of this, we’ll need to create a secondary storage volume. Our recommendation is at least 500GB to begin with. But as you'll need more space in the future, opt for a larger volume or one that be dynamically  adjusted.
+Because of this, we’ll need to create a secondary storage volume. Our recommendation is at least 1.3TB for a full node, and 150GB to begin with. But as you'll need more space in the future, opt for a larger volume or one that be dynamically adjusted.
+
+{% hint style="info" %}
+Note that if you are downloading a snapshot and using the Aria2 program to download it, you will need to have *DOUBLE* the reccomendation above for the initial sync.  This is because the Aria2 download method downloads the full snapshot which for full node is currently ~1.1TB, and the Aria method downloads the full snapshot tarball using multiple connections (much faster than `wget` or `curl`) but it cannot extract the file simultainously. It must download the full snapshot (which for full snapshots is over 1TB) and then once downloaded fully it can be extracted, but this process extracts the snapshot Data Directory from the tarball and only once it completes can the tarball be deleted.  So if using the Aria download method you need to account for this while settting up your node, since you'll need at least 2.2TB of storage during initial sync when using a full snapshot.
+The inline wget download method avoids this by piping the download command to the extraction command, which makes this massive amount of storage unnecessary because it downloads the file immediately pipes the downloaded files to the next command which extracts the downloaded parts as they're downloaded eliminating the need to have temporary storage space (~2x what is reccomended) to hold the download while it's being extracted.
+The downside to using this method is that it's much slower than aria, instead of being able to download using up to 16 connections at once, wget is limited to one connection.  Also because the file for the full snapshot is so large these days, connection issues at anytime during the download on the client side or server side, can easily stop the download or corrupt the data so that the whole procss (which on a residential connection can take several days or more) needs to be restarted. There's no way to pick up where it was left off since the downloaded file has been altered already long before it's even been completely downloaded.
+{% endhint %}
 
 1. In your Linode account, click **Volumes** and then **Create Volume**.
 2. Create a volume with the following specifications:
    * **Label**: `poktuserdir`
-   * **Size**: 800GB
+   * **Size**: 1.3TB for full node - 150GB for a pruned node
    * **Region**: \[Same as your instance]
    * **Linode**: `pokt001`
 
@@ -136,19 +140,21 @@ In a previous step, we set the DNS name for the node. Now we’ll use the same n
 
 To set the server hostname use the following steps:
 
-1.  Open the `/etc/hostname` file with the following command:
+1. Open the `/etc/hostname` file with the following command:
 
     ```bash
     nano /etc/hostname
     ```
+
 2. Change the `localhost` value to the hostname of your node (for example, `pokt001.pokt.run`).
 3. Save the file with `Ctrl+O` and then `Enter`.
 4. Exit nano with `Ctrl+X`.
-5.  Reboot the server with the following command:
+5. Reboot the server with the following command:
 
     ```bash
     reboot
     ```
+
 6. Wait for the server to reboot then ssh back in as the `root` user before continuing on.
 
 ### 6. Create a Pocket user account <a href="#create-a-pocket-user-account" id="create-a-pocket-user-account"></a>
@@ -232,18 +238,19 @@ Using an SSH key removes the ability for credentials to be sniffed in the login 
 
 One important thing to understand, is that without access to the ssh key, you won’t be able to log into your node. If you intend on accessing your node from multiple computers, it’s recommended that you repeat the Generate Key and Upload Key steps from each computer that you intend to access your node from before moving on to the Disable Root Login and Password Authentication step.
 
-1.  **Log Out**
+1. **Log Out**
 
     At the terminal you’ll need to enter the `logout` command twice. The first logout logs you out of the pocket user, back to the root user, and the second logout logs you out of the server and back to your terminal.
-2.  **Generate Key**
+2. **Generate Key**
 
     Next, we’ll generate an ssh key. To do that you’ll run the ssh-keygen command. You’ll be prompted to specify the file you want to save the key to, and for a password. Specifying a password means that if someone has access to your key, they’d still need to know the password to be able to use it to login. To create the key, do the following:
 
-    *   Run the ssh-keygen command
+    * Run the ssh-keygen command
 
         ```bash
         ssh-keygen -t rsa -b 4096
         ```
+
     * Enter file in which to save the key (`~/.ssh/id_rsa`)
     * Enter a passphrase (empty for no passphrase)
     * Enter same passphrase again
@@ -266,7 +273,8 @@ One important thing to understand, is that without access to the ssh key, you wo
     |   . +o.*+.      |
     +----[SHA256]-----+
     ```
-3.  **Upload Key**
+
+3. **Upload Key**
 
     Now we’re going to upload the key so that we can use it to log into the pocket user. If you choose a different path for the ssh key, it’s important to replace the `~/.ssh/id_rsa` with the key you used.
 
@@ -280,7 +288,7 @@ Windows users may not have access to this command. If you don't have access to a
 ```
 {% endhint %}
 
-1.  **Disable Root Login and Password Authentication**
+1. **Disable Root Login and Password Authentication**
 
     Now we’re now going to configure ssh to no longer allow root logins, and to not allow any password based login attempts. Meaning without access to the ssh key for the pocket user, no one will be able to log into the server.
 
@@ -309,7 +317,8 @@ Windows users may not have access to this command. If you don't have access to a
     ```bash
     sudo systemctl restart sshd.service
     ```
-2.  **Verify Everything Works**
+
+2. **Verify Everything Works**
 
     The last step is to log out of the server, and try logging back in. If you’re no longer prompted for a password, then everything is working as expected.
 

@@ -1,67 +1,100 @@
 # Part 3 - Pocket Configuration
 
-### 1. Download Snapshot
+## 1. Download Snapshot
 
 Rather than synchronizing your Pocket node from block zero (which could take weeks), you can use a snapshot.
 
-Instead of synchronizing your node from block zero, which could take weeks, you can use a snapshot.  A snapshot of the Pocket blockchain is taken every 12 hours and can be downloaded using the instructions on the [Pocket Snapshots Repository](https://github.com/pokt-foundation/pocket-snapshotter) page.
+- [Public snapshots](#public-snapshots)
+  - [Update Frequency](#update-frequency)
+- [Mirrors](#mirrors)
+  - [Download using CLI](#download-using-cli)
+    - [Uncompressed](#uncompressed)
+    - [Uncompressed Inline (slower but smaller disk footprint)](#uncompressed-inline-slower-but-smaller-disk-footprint)
+    - [Compressed](#compressed)
+    - [Compressed Inline (slower but smaller disk footprint)](#compressed-inline-slower-but-smaller-disk-footprint)
+  - [Issues](#issues)
 
-{% hint style="info" %}
-The snapshots are updated every 12 hours. Check the last update time of the README.md file in the GitHub repo to know when the last snapshot was taken, and it's best to download one that's just a few hours old.
-{% endhint %}
+## Public snapshots
 
-**Downloading a snapshot will likely take a few hours**, so we’re going to use the `screen` command so that the download can run in the background, allowing you to perform other tasks.
+If you're looking for Pocket native blockchain data snapshots, they are provided by [Liquify LTD](https://www.liquify.io/) and can be viewed via the Explorer link: [File Explorer here](https://pocket-snapshot.liquify.com).
 
-**To download the most recent snapshot:**
+## Pruned Snapshots
 
-1.  Create a `screen` instance:
+In addition to providing regularly updated full Pocket Network Blockchain Snapshots, the Liquify team also hosts Pruned Snapshots. These snapshots are not taken or posted as regularly as the full snapshots but they are stored in the same format on the same servers in the [Pruned Directory](https://pocket-snapshot.liquify.com/#/pruned/).  
 
-    ```bash
-    screen
-    ```
+Pruned Snapshots have several benefits and drawbacks:
 
-    Press `Enter` to get back to a prompt.
-2.  Change into the `.pocket` directory.
+- They are created using C0D3R's [Pruner App](https://github.com/pokt-network/pocket-core/blob/staging/doc/guides/pruner.md#pocket-pruner) and are drastically smaller than a full node Snapshot (i.e. Currently a Full Snapshot is over 1TB, while a pruned snapshot is ~70GB)
+- This is great for resource constrained nodes, it only takes a couple hours to download, extract, and then sync up to the currrent head of the chain.
+- So for nodes that lack storage for over 1TB to store just the Pocket mainnet chain, not counting any relayed chains, this is great and can onboard users faster and with less storage,
+- An inherent downside with the pruned nodes is that you cannot relay the Pokt Mainnet Chain (0001) with your node because you don't have all the chain data, only whats necessary to continue syncing and following the chain, which is not enough to query it for transactions etc as you do when relaying a chain using the Pokt Network.
+- The above also means that Validators (nodes in the top 1,000 in terms of Pokt staked) that propose new blocks for the Pokt Chain and collect significant rewards when they do, cannot run a pruned node and must have the full Pokt blockchain since they require all the data to relay it and to propose blocks.
+- Another side effect of the above is that peering can become difficult initially because you are missing a huge amount of chain data that other users syncing are looking for and this can lead to getting blacklisted on these other users AddrBook.json's.
+- Finally, pruned snapshots are not uploaded as frequently as full snapshots, so you may end up with a 3 week old pruned snapshot that has to fully sync the final 3 weeks, which can take some time depending on peering status. However it appears this schedule is improving because at the time of writing the last 3 pruned snapshots were uploaded 10-11 days apart.
 
-    ```bash
-    cd ~/.pocket
-    ```
-3.  Create a directory named `data` and change into it:
+### Update Frequency
 
-    ```bash
-    mkdir data && cd data
-    ```
-4.  Download the latest snapshot using the following command:
+Snapshots are updated every **Monday at 00:00 UTC**. The snapshots are generated on the Master (UK) and then sent over to the US and JP regions.
 
-    ```bash
-    wget -qO- https://snapshot.nodes.pokt.network/latest.tar.gz | tar xvfz -
-    ```
+## Mirrors
 
-While the snapshot is downloading, press `Ctrl-A` and then `d` to let the process run in the background and be returned to a prompt.
+The pocket snapshot link above is a global endpoint which is available in 3 different regions (UK, US west, Japan). The individual regions can also be accessed on the following links.
 
-To return to your `screen` instance to see how things are going:
+- UK (Master):[pocket-snapshot-uk.liquify.com](https://pocket-snapshot-uk.liquify.com)
+- US: [pocket-snapshot-us.liquify.com](https://pocket-snapshot-us.liquify.com)
+- JP: [pocket-snapshot-jp.liquify.com](https://pocket-snapshot-jp.liquify.com)
 
-```bash
-screen -r
-```
+_Note: If accessing the snapshots on Monday it may be best to use the UK (Master) endpoint since there will be a 4-12 hour delay in updating the slaves in the other regions._
 
-You can also check on the status of the download by watching your disk usage:
+### Download using CLI
 
-```bash
-df -h
-```
+The snapshot repos hold the last **3 weeks of snapshots**. The latest ones being referenced by the file `latest.txt` and `latest_compressed.txt`.
 
-Once your download is completed, make the `pocket` user the owner of the `data` directory:
-
-```bash
-sudo chown -R pocket ~/.pocket/data
-```
-
-And when you’re done with your `screen` instance, you can exit out of it:
+To copy-paste the commands below, please update `POCKET_DATA_DIR` appropriately.
 
 ```bash
-exit
+export POCKET_DATA_DIR=<absolute path to your data dir>
 ```
+
+#### Uncompressed
+
+```bash
+[ -d ${POCKET_DATA_DIR} ] || mkdir -p ${POCKET_DATA_DIR}
+aria2c -s6 -x6 "https://pocket-snapshot.liquify.com/files/$(curl -s https://pocket-snapshot.liquify.com/files/latest.txt)"
+tar -xvf "$latestFile" -C ${POCKET_DATA_DIR}
+```
+
+#### Uncompressed Inline (slower but smaller disk footprint)
+
+The below snippet will download and extract the snapshot inline. This may be beneficial if you have constrained disk space and cannot afford to store both the temp archive and extracted datadir.
+
+```bash
+[ -d ${POCKET_DATA_DIR} ] || mkdir -p ${POCKET_DATA_DIR}
+wget -c "https://pocket-snapshot.liquify.com/files/$(curl -s https://pocket-snapshot.liquify.com/files/latest.txt)" -O - \
+| tar -xv -C ${POCKET_DATA_DIR}
+```
+
+#### Compressed
+
+```bash
+[ -d ${POCKET_DATA_DIR} ] || mkdir -p ${POCKET_DATA_DIR}
+aria2c -s6 -x6 "https://pocket-snapshot.liquify.com/files/$(curl -s https://pocket-snapshot.liquify.com/files/latest_compressed.txt)"
+lz4 -c -d "$latestFile" | tar -xv -C ${POCKET_DATA_DIR}
+```
+
+#### Compressed Inline (slower but smaller disk footprint)
+
+```bash
+[ -d ${POCKET_DATA_DIR} ] || mkdir -p ${POCKET_DATA_DIR}
+wget -c "https://pocket-snapshot.liquify.com/files/$(curl -s https://pocket-snapshot.liquify.com/files/latest_compressed.txt)" -O - \
+| lz4 -d - | tar -xv -C ${POCKET_DATA_DIR}
+```
+
+### Issues
+
+For any snapshot related issues, please [email Liquify](mailto:contact@liquify.io) or in the [node-chat channel on discord](https://discordapp.com/channels/553741558869131266/564836328202567725).
+
+![Screenshot](https://github.com/pokt-network/pocket-core/assets/1892194/079b8dc5-4536-46b9-be69-7ae6b162c883)
 
 ### 2. Create a Pocket wallet account <a href="#create-a-pocket-wallet-account" id="create-a-pocket-wallet-account"></a>
 
@@ -80,7 +113,7 @@ You’ll be asked to set a passphrase for the account. You can use any passphras
 {% hint style="info" %}
 If you already have a Pocket account that you’d like to use to run the node, you can import it here. Upload the JSON file associated with your account to the server and run the following command:
 
-```
+```bash
 pocket accounts import-armored <armoredJSONFile>
 ```
 
@@ -117,7 +150,7 @@ The Pocket core software uses a config file to store configuration details. By d
 
 To create a new config file:
 
-1.  Run the following command, which will create the default `config.json` file, add the seeds, set port 8081 to 8082, and increase the RPC timeout value:
+1. Run the following command, which will create the default `config.json` file and add the seeds:
 
     ```bash
     export SEEDS=$(curl -s https://raw.githubusercontent.com/pokt-network/pocket-seeds/main/mainnet.txt \
@@ -125,15 +158,13 @@ To create a new config file:
     | sed 's/,*$//')
     pocket util print-configs \
     | jq --arg seeds "$SEEDS" '.tendermint_config.P2P.Seeds = $seeds' \
-    | jq '.pocket_config.rpc_timeout = 15000' \
-    | jq '.pocket_config.rpc_port = "8082"' \
-    | jq '.pocket_config.remote_cli_url = "http://localhost:8082"' \
+    | jq '.pocket_config.remote_cli_url = "http://localhost:8081"' \
     | jq . > ~/.pocket/config/config.json
     ```
 
-{% hint style="warning" %}
-This code above includes a long command! Make sure you’ve copied it completely.
-{% endhint %}
+    {% hint style="warning" %}
+    This code above includes a long command! Make sure you’ve copied it completely.
+    {% endhint %}
 
 2. Verify the `config.json` file setting by viewing the contents of the file:
 
@@ -159,17 +190,19 @@ pocket util generate-chains
 
 This will prompt you for the following information:
 
-*   Enter the ID of the Pocket Network RelayChain ID:
+- Enter the ID of the Pocket Network RelayChain ID:
 
-    ```
+    ```bash
     0001
     ```
-*   Enter the URL of the local network identifier.
 
+- Enter the URL of the local network identifier.
+
+    ```bash
+    http://127.0.0.1:8081/
     ```
-    http://127.0.0.1:8082/
-    ```
-* When you’re prompted to add another chain, enter `n` for now.
+
+- When you’re prompted to add another chain, enter `n` for now.
 
 {% hint style="info" %}
 By default the `chains.json` file will be created in `~/.pocket/config`. You can use the `--datadir` flag to create the chains.json file in an alternate location. For example: `pocket util generate-chains --datadir "/mnt/data/.pocket"`.
@@ -183,12 +216,13 @@ When you start a Pocket node for the first time, it will need to find other node
 
 To create a JSON file with the genesis information:
 
-1.  Change to the `.pocket/config` directory:
+1. Change to the `.pocket/config` directory:
 
     ```bash
     cd ~/.pocket/config
     ```
-2.  Use the following command to get the `genesis.json` file from GitHub:
+
+2. Use the following command to get the `genesis.json` file from GitHub:
 
     ```bash
     wget https://raw.githubusercontent.com/pokt-network/pocket-network-genesis/master/mainnet/genesis.json genesis.json
@@ -200,17 +234,19 @@ Ubuntu and other UNIX-like systems have a `ulimit` shell command that’s used t
 
 #### Increasing the ulimit <a href="#increasing-the-ulimit" id="increasing-the-ulimit"></a>
 
-1.  Before increasing the ulimit, you can check the current ulimit with the following command:
+1. Before increasing the ulimit, you can check the current ulimit with the following command:
 
     ```bash
     ulimit -n
     ```
-2.  Increase the ulimit to 16384. The `-Sn` option is for setting the soft limit on the number of open files:
+
+2. Increase the ulimit to 16384. The `-Sn` option is for setting the soft limit on the number of open files:
 
     ```bash
     ulimit -Sn 16384
     ```
-3.  Check the new ulimit to confirm that it was set correctly. The `-n` option is for getting the limit for just the number of open files:
+
+3. Check the new ulimit to confirm that it was set correctly. The `-n` option is for getting the limit for just the number of open files:
 
     ```bash
     ulimit -n
@@ -220,17 +256,20 @@ Ubuntu and other UNIX-like systems have a `ulimit` shell command that’s used t
 
 Using the above method for setting the `ulimit` only keeps the change in effect for the current session. To permanently set the ulimit, you can do the following:
 
-1.  Open the `/etc/security/limits.conf` file.
+1. Open the `/etc/security/limits.conf` file.
 
     ```bash
     sudo nano /etc/security/limits.conf
     ```
-2.  Add the following line to the bottom of the file:
 
-    ```bash
+2. Add the following line to the bottom of the file:
+
+    ```conf
     pocket           soft    nofile          16384
     ```
+
 3. Save the file with `Ctrl+O` and then `Enter`.
+
 4. Exit nano with `Ctrl+X`.
 
 After permanently setting the ulimit, the next thing we’ll do is download a snapshot of the Pocket blockchain.
@@ -243,12 +282,13 @@ Next, we’ll configure the Pocket service using [systemd](https://en.wikipedia.
 
 To setup a systemd service for Pocket, do the following:
 
-1.  Open nano and create a new file called `pocket.service`:
+1. Open nano and create a new file called `pocket.service`:
 
     ```bash
     sudo nano /etc/systemd/system/pocket.service
     ```
-2.  Add the following lines to the file:
+
+2. Add the following lines to the file:
 
     ```ini
     [Unit]
@@ -265,42 +305,53 @@ To setup a systemd service for Pocket, do the following:
     [Install]
     WantedBy=default.target
     ```
+
 3. Make sure the `User` is set to the user that will run the Pocket service.
+
 4. Make sure the `ExecStart` and `ExecStop` paths are set to the path for the Pocket binary.
+
 5. Save the file with `Ctrl+O` and then `return`.
+
 6. Exit nano with `Ctrl+X`.
-7.  Reload the service files to include the pocket service:
+
+7. Reload the service files to include the pocket service:
 
     ```bash
     sudo systemctl daemon-reload
     ```
-8.  Start the pocket service:
+
+8. Start the pocket service:
 
     ```bash
     sudo systemctl start pocket.service
     ```
-9.  Verify the service is running:
+
+9. Verify the service is running:
 
     CommandResponse
 
     ```bash
     sudo systemctl status pocket.service
     ```
+
 10. Stop the pocket service:
 
     ```bash
     sudo systemctl stop pocket.service
     ```
+
 11. Verify the service is stopped:
 
     ```bash
     sudo systemctl status pocket.service
     ```
+
 12. Set the service to start on boot:
 
     ```bash
     sudo systemctl enable pocket.service
     ```
+
 13. Verify the service is set to start on boot:
 
     CommandResponse
@@ -308,6 +359,7 @@ To setup a systemd service for Pocket, do the following:
     ```bash
     sudo systemctl list-unit-files --type=service | grep pocket.service
     ```
+
 14. Start the pocket service:
 
     ```bash
@@ -316,17 +368,19 @@ To setup a systemd service for Pocket, do the following:
 
 #### Other systemctl commands <a href="#other-systemctl-commands" id="other-systemctl-commands"></a>
 
-*   Restart the Pocket service:
+- Restart the Pocket service:
 
     ```bash
     sudo systemctl restart pocket.service
     ```
-*   Prevent the service from starting on boot:
+
+- Prevent the service from starting on boot:
 
     ```bash
     sudo systemctl disable pocket.service
     ```
-*   View mounted volumes:
+
+- View mounted volumes:
 
     ```bash
     sudo systemctl list-units --type=mount
@@ -334,12 +388,13 @@ To setup a systemd service for Pocket, do the following:
 
 #### Viewing the logs <a href="#viewing-the-logs" id="viewing-the-logs"></a>
 
-*   View the logs for the Pocket service:
+- View the logs for the Pocket service:
 
     ```bash
     sudo journalctl -u pocket.service
     ```
-*   View just the last 100 lines of the logs (equivalent to the `tail -f` command):
+
+- View just the last 100 lines of the logs (equivalent to the `tail -f` command):
 
     ```bash
     sudo journalctl -u pocket.service -n 100 --no-pager
@@ -356,15 +411,16 @@ sudo journalctl -u pocket.service | grep -i error
 {% hint style="info" %}
 In case you skipped the step above while the snapshot was downloading, once your download is completed, make the `pocket` user the owner of the `data` directory:
 
-```
+```bash
 sudo chown -R pocket ~/.pocket/data
 ```
 
 And when you’re done with your `screen` instance, you can exit out of it:
 
-```
+```bash
 exit
 ```
+
 {% endhint %}
 
 We are almost done! We now need to setup an HTTP proxy in the next step and we’ll be ready to go live.

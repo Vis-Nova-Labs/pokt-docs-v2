@@ -1,12 +1,12 @@
 ---
 description: >-
   Pocket Network is compatible with any network/blockchain (RelayChain) that
-  uses the RPC standard.
+  uses the RPC standard; though only some chains are currently supported for relaying in exchange for generating POKT rewards.
 ---
 
 # Supported Chains
 
-### POKT Mainnet
+## POKT Mainnet
 
 Below is the full list of supported, reward-generating RelayChains, identical to the `SupportedBlockchains` parameter.
 

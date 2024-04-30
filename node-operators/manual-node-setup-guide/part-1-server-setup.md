@@ -21,12 +21,12 @@ Let’s start by creating a Linode instance (a virtual machine).
 To create a Linode instance, do the following:
 
 1. Sign up for a [Linode](https://www.linode.com/) account and login.
-2. Create a new Linode with the following specifications:
+2. Create a new Linode instance with the following specifications:
    * **Image / Distribution**: `Ubuntu 20.04 LTS`
    * **Region**: `Atlanta, GA`
    * **Linode Plan**: `Dedicated 16 GB - 8 CPU, 320 GB Storage, 16 GB RAM`
    * **Linode Label**: `pokt001`
-3. Wait for the Linode to be created and show up as running in the web interface.
+3. Wait for the Linode instance to be created and show up as running in the web interface.
 
 {% hint style="info" %}
 For a more detailed guide on setting up a Linode instance, see the [Linode docs](https://www.linode.com/docs/guides/getting-started/). Also, note that the `Atlanta, GA` region was selected for this guide because it supports [NVMe storage](https://www.linode.com/products/block-storage/#nvme-block-storage) which is preferable for running nodes. [Check to see which other regions support NVMe storage](https://www.linode.com/blog/cloud-storage/nvme-block-storage-global-rollout/).
@@ -80,7 +80,7 @@ ping -c 3 pokt001.pokt.run
 
 You should see a response that looks something like this:
 
-```
+```bash
 64 bytes from 134.23.153.21: icmp_seq=0 ttl=47 time=92.403 ms
 64 bytes from 134.23.153.21: icmp_seq=1 ttl=47 time=142.828 ms
 64 bytes from 134.23.153.21: icmp_seq=2 ttl=47 time=182.456 ms
@@ -103,7 +103,7 @@ The [Secure Shell Protocol](https://en.wikipedia.org/wiki/Secure\_Shell) (SSH) i
 If you’re using a Mac, or Linux, on your local computer, you can SSH into your node by doing the following:
 
 * Open a terminal
-*   SSH into your node using the following command:
+  * SSH into your node using the following command:
 
     ```bash
     ssh root@pokt001.pokt.run
@@ -120,7 +120,7 @@ You’ll be asked for your password. This is the root password that you set when
 Windows 10 and later have a built-in SSH client. You can use SSH on Windows by doing the following:
 
 * Open the Windows terminal
-*   SSH into your node using the following command:
+* SSH into your node using the following command:
 
     ```bash
     ssh root@pokt001.pokt.run
@@ -163,12 +163,13 @@ For security reasons it’s best not to use the `root` user. Instead, it’s bet
 
 To create a new user, enter the following commands:
 
-1.  Create a new user named `pocket`, add it to the `sudo` group, and set the default shell to `bash`. If you want to specify the location of the home directory, you can use the `-d` option followed by the path to the home directory:
+1. Create a new user named `pocket`, add it to the `sudo` group, and set the default shell to `bash`. If you want to specify the location of the home directory, you can use the `-d` option followed by the path to the home directory:
 
     ```bash
     useradd -m -g sudo -s /bin/bash pocket && passwd pocket
     ```
-2.  For the rest of this guide, we’ll be using the `pocket` user. So now that the `pocket` user is created, you can switch from using `root` to the `pocket` user with the following command:
+
+2. For the rest of this guide, we’ll be using the `pocket` user. So now that the `pocket` user is created, you can switch from using `root` to the `pocket` user with the following command:
 
     ```bash
     su - pocket
@@ -178,46 +179,52 @@ To create a new user, enter the following commands:
 
 Next we want to mount the secondary storage volume that we created in a previous step.
 
-1.  Verify that the volume is attached to your instance.
+1. Verify that the volume is attached to your instance.
 
     CommandResponse
 
-    ```
+    ```bash
     sudo fdisk -l
     ```
-2.  Create a new partition. If the previous command shows a file path different from `/dev/sdc`, use that instead in the commands below:
 
-    ```
+2. Create a new partition. If the previous command shows a file path different from `/dev/sdc`, use that instead in the commands below:
+
+    ```bash
     sudo mkfs.ext4 /dev/sdc
     ```
-3.  Create a new mount point:
 
-    ```
+3. Create a new mount point:
+
+    ```bash
     sudo mkdir /mnt/data
     ```
-4.  Mount the new partition:
 
-    ```
+4. Mount the new partition:
+
+    ```bash
     sudo mount /dev/sdc /mnt/data
     ```
-5.  Verify that the partition was created by running the following command:
 
-    CommandResponse
+5. Verify that the partition was created by running the following command:
 
-    ```
+    ```bash
     sudo lsblk -o NAME,PATH,SIZE,FSAVAIL,FSUSE%,MOUNTPOINT
     ```
-6.  Set the volume to be mounted automatically. Open `/etc/fstab`:
 
-    ```
+6. Set the volume to be mounted automatically. Open `/etc/fstab`:
+
+    ```bash
     sudo nano /etc/fstab
     ```
-7.  Add the following line to the bottom of the file:
 
-    ```
+7. Add the following line to the bottom of the file:
+
+    ```bash
     /dev/sdc /mnt/data ext4 defaults,noatime,nofail 0 2
     ```
+
 8. Save the file with `Ctrl+O` and then `Enter`.
+
 9. Exit nano with `Ctrl+X`.
 
 ### 8. Move the home directory <a href="#move-the-home-directory" id="move-the-home-directory"></a>
@@ -226,7 +233,7 @@ Many Pocket commands assume a data directory path of `~/.pocket`. While it is po
 
 To change the home directory of the `pocket` user:
 
-```
+```bash
 sudo usermod -d /mnt/data pocket
 ```
 
@@ -241,6 +248,7 @@ One important thing to understand, is that without access to the ssh key, you wo
 1. **Log Out**
 
     At the terminal you’ll need to enter the `logout` command twice. The first logout logs you out of the pocket user, back to the root user, and the second logout logs you out of the server and back to your terminal.
+
 2. **Generate Key**
 
     Next, we’ll generate an ssh key. To do that you’ll run the ssh-keygen command. You’ll be prompted to specify the file you want to save the key to, and for a password. Specifying a password means that if someone has access to your key, they’d still need to know the password to be able to use it to login. To create the key, do the following:
@@ -283,9 +291,11 @@ One important thing to understand, is that without access to the ssh key, you wo
     ```
 
 {% hint style="info" %}
+
 ```
 Windows users may not have access to this command. If you don't have access to a Bash shell, you can use PowerShell to mimic this command. [See these instructions for more details.](https://chrisjhart.com/Windows-10-ssh-copy-id/)
 ```
+
 {% endhint %}
 
 1. **Disable Root Login and Password Authentication**
@@ -322,9 +332,9 @@ Windows users may not have access to this command. If you don't have access to a
 
     The last step is to log out of the server, and try logging back in. If you’re no longer prompted for a password, then everything is working as expected.
 
-    WindowsLinux/macOS
+    Windows/Linux/macOS
 
-    ```
+    ```bash
     ssh -i C:\Users\<USER>\.ssh\id_rsa -l pocket pokt001.pokt.run
     ```
 

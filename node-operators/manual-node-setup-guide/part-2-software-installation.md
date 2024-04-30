@@ -1,12 +1,12 @@
 # Part 2 - Software Installation
 
-## 1. Install Dependencies
+## 1. Install Prerequisites
 
-Now let's install the Pocket CLI.
+Now let's prepare to install the Pocket CLI.
 
-At this point you should be logged in via SSH as the `pocket` user that we set up in a previous step. Before we install the Pocket software, we need to update the existing system packages and add a few dependencies:&#x20;
+At this point you should be logged into your Hosted Node we just setup in the [Last Step](./part-1-server-setup.md) via SSH as the `pocket` user that we set up in a previous step. Before we install the Pocket software, we need to update the existing system packages and add a few dependencies:&#x20;
 
-### Updating system packages
+### Updating System Packages
 
 1. Update the repository index with the following command:
 
@@ -22,69 +22,69 @@ At this point you should be logged in via SSH as the `pocket` user that we set u
 
 After the update completes, we're ready to install the dependencies.
 
-#### Installing dependencies
+### Installing Dependencies
 
-There are a handful of dependencies but installing them won't take long. Some might already be installed so if one of the dependencies exists, you can just move on to the next one.
+There are a handful of required dependencies but installing them won't take long. Some might already be installed, so if one of the dependencies exists, you can just move on to the next one.
 
-**git**
+* **git**
 
-```bash
-sudo apt-get install git -y
-```
+    ```bash
+    sudo apt-get install git -y
+    ```
 
-**build tools**
+* **build tools**
 
-```bash
-sudo apt-get install build-essential -y
-```
+    ```bash
+    sudo apt-get install build-essential -y
+    ```
 
-**curl**
+* **curl**
 
-```bash
-sudo apt-get install curl -y
-```
+    ```bash
+    sudo apt-get install curl -y
+    ```
 
-**file**
+* **file**
 
-```bash
-sudo apt-get install file -y
-```
+    ```bash
+    sudo apt-get install file -y
+    ```
 
-**nginx**
+* **nginx**
 
-```bash
-sudo apt install nginx -y
-```
+    ```bash
+    sudo apt install nginx -y
+    ```
 
-**certbot**
+* **certbot**
 
-```bash
-sudo apt install certbot -y
-```
+    ```bash
+    sudo apt install certbot -y
+    ```
 
-**python3-certbot-nginx**
+* **python3-certbot-nginx**
 
-```bash
-sudo apt-get install python3-certbot-nginx -y
-```
+    ```bash
+    sudo apt-get install python3-certbot-nginx -y
+    ```
 
-**jq**
+* **jq**
 
-```bash
-sudo apt install jq -y
-```
+    ```bash
+    sudo apt install jq -y
+    ```
 
-**lz4**
+* **lz4**
 
-```bash
-sudo apt install lz4 -y
-```
+    ```bash
+    sudo apt install lz4 -y
+    ```
 
-**aria2**
+* **aria2c**
 
-```bash
-sudo apt install aria2 -y
-```
+    ```bash
+    sudo apt install aria2 -y
+    ```
 
 ### 2. Install Go
 
@@ -98,16 +98,16 @@ We could install Go using `apt`, but we want to get the latest stable version wh
     cd ~
     ```
 
-2. Find the latest version of Go from [https://golang.org/dl/](https://golang.org/dl/) then download it with the following command. (Make sure to change the link below to point to the correct version of Go.)
+2. Find the latest stable version of Go from the [Official Golang Organization Downloads](https://go.dev/dl/) then download it with the following command. (Make sure to change the link below to point to the correct version of Go.)
 
     ```bash
-    wget https://dl.google.com/go/go1.19.2.linux-amd64.tar.gz
+    wget https://dl.google.com/go/go1.21.9.linux-amd64.tar.gz
     ```
 
 3. Extract the archive:
 
     ```bash
-    sudo tar -xvf go1.19.2.linux-amd64.tar.gz
+    sudo tar -xzvf go1.21.9.linux-amd64.tar.gz
     ```
 
 4. Set permissions on the extracted files:
@@ -190,4 +190,6 @@ To download and install Pocket Core, do the following:
 
 7. Test that the build succeeded by running `pocket version`.
 
-That’s it for the software installation. Now let’s move on to the Pocket core configuration.
+### That’s it for the software installation
+
+### Now let’s move on to the Pocket Core configuration
